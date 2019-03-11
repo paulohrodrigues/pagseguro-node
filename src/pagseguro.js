@@ -87,15 +87,15 @@ pagseguro.prototype.addItem = function(item) {
 pagseguro.prototype.sendTransaction = function(transaction, cb) {
     this.checkoutData.paymentMethod = transaction.method;
     this.checkoutData.installmentQuantity = transaction.installments || 1;
-    this.checkoutData.installmentValue = (transaction.value / transaction.installments).toFixed(2);
+    this.checkoutData.installmentValue = (transaction.value / this.checkoutData.installmentQuantity).toFixed(2);
+    this.checkoutData.extraAmount = (transaction.extra_amount || 0.00).toFixed(2)
     this.checkoutData.senderHash = transaction.hash;
-    this.checkoutData.reference = transaction.reference;
 
     if (transaction.installments && transaction.installments > 1) {
         this.checkoutData.noInterestInstallmentQuantity = transaction.installments;
     }
 
-    if (this.checkoutData.paymentMethod == 'creditCard') {
+    if (this.checkoutData.paymentMethod === 'creditCard') {
         this.checkoutData.creditCardToken = transaction.credit_card_token;
         this.checkoutData.creditCardHolderName = this.holder ? this.holder.name : this.sender.name;
         this.checkoutData.creditCardHolderAreaCode = this.holder ? this.holder.area_code : this.sender.area_code;
@@ -103,7 +103,7 @@ pagseguro.prototype.sendTransaction = function(transaction, cb) {
         this.checkoutData.creditCardHolderBirthDate = this.holder ? this.holder.birth_date : this.sender.birth_date;
 
         let cpf_cnpj = this.holder ? this.holder.cpf_cnpj : this.sender.cpf_cnpj
-        if (cpf_cnpj.length == 11) {
+        if (cpf_cnpj.length === 11) {
             this.checkoutData.creditCardHolderCPF = cpf_cnpj;
         } else {
             this.checkoutData.creditCardHolderCNPJ = cpf_cnpj;
@@ -118,7 +118,7 @@ pagseguro.prototype.sendTransaction = function(transaction, cb) {
     request.post(params, function(err, response, body) {
         if (err) {
             return cb(err, false);
-        } else if (response.statusCode == 200) {
+        } else if (response.statusCode === 200) {
             const json = JSON.parse(xmlParser.toJson(body));
             return cb(false, json.transaction);
         } else {
